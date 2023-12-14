@@ -3,7 +3,7 @@ Create a simple AWS VPC spanning 2 AZs. Public subnets will be created, together
 
 https://github.com/cloudacademy/terraform-aws/tree/main/exercises/exercise1
 
-![AWS Architecture](/doc/AWS-VPC-Nginx.png)
+![AWS Architecture](/Architecture_images/AWS-VPC-Nginx.png)
 
 #### Project Structure
 
@@ -26,3 +26,4 @@ https://github.com/cloudacademy/terraform-aws/tree/main/exercises/exercise1
 
 - Terraform environment variables are documented here:
 [https://www.terraform.io/cli/config/environment-variables](https://www.terraform.io/cli/config/environment-variables)
+
