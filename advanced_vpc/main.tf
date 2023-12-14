@@ -159,7 +159,6 @@ resource "aws_security_group" "load_balancer_sg" {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
-    # cidr_blocks = [var.wildcard]
     security_groups = [aws_security_group.nginx_servers.id]
   }
 
