@@ -9,7 +9,7 @@ For demonstration purposes only - both the frontend and the API will be deployed
 
 https://github.com/cloudacademy/terraform-aws/tree/main/exercises/exercise4
 
-![AWS Architecture](/doc/AWS-VPC-FullApp.png)
+![AWS Architecture](/Architecture_images/AWS-VPC-FullApp.png)
 
 The auto scaling web application layer bootstraps itself with both the [Frontend](https://github.com/cloudacademy/voteapp-frontend-react-2020) and [API](https://github.com/cloudacademy/voteapp-api-go) components by pulling down their **latest** respective releases from the following repos:
 
@@ -77,7 +77,7 @@ data "template_cloudinit_config" "config" {
 
 The ALB will configured with a single listener (port 80). 2 target groups will be established. The frontend target group points to the Nginx web server (port 80). The API target group points to the custom API service (port 8080). 
 
-![AWS Architecture](/doc/AWS-VPC-FullApp-TargetGrps.png)
+![AWS Architecture](/Architecture_images/AWS-VPC-FullApp-TargetGrps.png)
 
 #### Project Structure
 
