@@ -7,3 +7,15 @@ module "network" {
   private_subnets = ["private_subnet 1", "private_subnet 2"]
   wildcard = "0.0.0.0/0"
 }
+
+module "security" {
+  source = "./modules/security"
+  wildcard = "0.0.0.0/0"
+  environment = "Testing"
+}
+
+module "application" {
+  source = "./modules/application"
+  alb_name = "nginx-alb"
+  environment = "Testing"
+}
