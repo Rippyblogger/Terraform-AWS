@@ -3,5 +3,5 @@ output "alb_sg" {
 }
 
 output "instances_sg" {
-  value = aws_security_group.instances
+  value = aws_security_group.instances.id
 }

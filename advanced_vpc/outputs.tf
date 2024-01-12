@@ -25,3 +25,7 @@ output "private_subnet_2" {
 output "eip" {
   value = aws_eip.lb.public_ip
 }
+
+output "public_subnets"{
+  value = aws_subnet.public_subnets
+}

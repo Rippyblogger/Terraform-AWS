@@ -11,11 +11,11 @@ variable "environment" {
 }
 
 variable "public_subnets" {
-  type = list(string)
+  type = list(any)
 }
 
 variable "private_subnets" {
-  type = list(string)
+  type = list(any)
 }
 
 variable "wildcard" {

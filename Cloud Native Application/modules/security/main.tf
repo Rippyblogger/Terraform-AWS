@@ -1,7 +1,7 @@
 resource "aws_security_group" "instances" {
   name        = "allow_access"
   description = "Allow SSH and HTTP inbound traffic"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = var.main_vpc_id
 
   ingress {
     description = "SSH from VPC"
@@ -35,7 +35,7 @@ resource "aws_security_group" "instances" {
 resource "aws_security_group" "alb" {
   name        = "alb_allow_access"
   description = "Allow HTTP inbound traffic"
-  vpc_id      = aws_vpc.main_vpc.id
+  vpc_id      = var.main_vpc_id
 
   ingress {
     description = "HTTP from VPC"
