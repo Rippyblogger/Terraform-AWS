@@ -7,6 +7,5 @@ output "eip_2" {
 }
 
 output "public_subnets" {
-  # value = module.network.public_subnets
   value = [ for item in module.network.public_subnets: item]
 }

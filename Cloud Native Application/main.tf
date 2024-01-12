@@ -12,14 +12,14 @@ module "security" {
   source = "./modules/security"
   wildcard = "0.0.0.0/0"
   environment = "Testing"
-  main_vpc_id = "module.network.vpc_id"
+  main_vpc_id = module.network.vpc_id
 }
 
 module "application" {
   source = "./modules/application"
   alb_name = "nginx-alb"
   environment = "Testing"
-  alb_id = "module.security.alb_sg"
+  alb_id = module.security.alb_sg
   public_subnets = module.network.public_subnets
-  main_vpc_id = "module.network.vpc_id"
+  main_vpc_id = module.network.vpc_id
 }
