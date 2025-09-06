@@ -41,7 +41,7 @@ resource "aws_security_group" "allow_port_traffic" {
 resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
 
   security_group_id = aws_security_group.allow_port_traffic.id
-  cidr_ipv4         = var.wildcard
+  cidr_ipv4         = local.allowed_ip
   from_port         = 22
   to_port           = 22
   ip_protocol       = "tcp"

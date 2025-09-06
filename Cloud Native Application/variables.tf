@@ -25,3 +25,7 @@ variable "private_subnets" {
 variable "ssh_key" {
   type = string
 }
+
+variable "workstation_ip" {
+  type = string
+}

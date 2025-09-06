@@ -13,3 +13,7 @@ variable "main_vpc_id" {
 variable "vpc_cidr_block" {
   type = string
 }
+
+variable "workstation_ip" {
+  type = string
+}

@@ -14,6 +14,7 @@ module "security" {
   environment    = var.environment
   main_vpc_id    = module.network.vpc_id
   vpc_cidr_block = module.network.vpc_cidr
+  workstation_ip    = var.workstation_ip
 }
 
 module "bastion" {
@@ -22,6 +23,7 @@ module "bastion" {
   allow_ssh_sg      = module.security.allow_ssh_sg
   allow_internal_sg = module.security.allow_internal_sg
   public_ssh_key    = var.ssh_key
+  
 }
 
 # module "application" {
