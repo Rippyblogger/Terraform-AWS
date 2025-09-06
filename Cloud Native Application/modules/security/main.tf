@@ -1,59 +1,65 @@
-resource "aws_security_group" "instances" {
-  name        = "allow_access"
-  description = "Allow SSH and HTTP inbound traffic"
+resource "aws_security_group" "allow_internal_traffic" {
+  name        = "Allow Internal traffic"
+  description = "Allow ports"
   vpc_id      = var.main_vpc_id
 
-  ingress {
-    description = "SSH from VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.wildcard]
-  }
-
-  ingress {
-    description = "HTTP from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [var.wildcard]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [var.wildcard]
-  }
-
   tags = {
-    Name        = "allow_access"
-    environment = var.environment
+    Name = "sg_allow_internal"
   }
 }
 
-resource "aws_security_group" "alb" {
-  name        = "alb_allow_access"
-  description = "Allow HTTP inbound traffic"
-  vpc_id      = var.main_vpc_id
+#Create internal VPC traffic ingress rule between instances
+resource "aws_vpc_security_group_ingress_rule" "allow_internal_traffic" {
 
-  ingress {
-    description = "HTTP from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [var.wildcard]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    security_groups = [aws_security_group.instances.id]
-  }
+  security_group_id = aws_security_group.allow_internal_traffic.id
+  cidr_ipv4         = var.vpc_cidr_block
+  from_port         = 0
+  to_port           = 65535
+  ip_protocol       = "tcp"
+  description       = "sg_allow_internal"
 
   tags = {
-    Name        = "allow_access"
-    environment = var.environment
+    Name = "Allow Internal traffic"
   }
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+#Allow port traffic from external sources
+resource "aws_security_group" "allow_port_traffic" {
+  name        = "Allow ports"
+  description = "Allow ports"
+  vpc_id      = var.main_vpc_id
+
+  tags = {
+    Name = "sg-allow-ssh"
+  }
+}
+
+#Create SSH ingress rule for bastion instance, for test purposes 0.0.0.0/0
+resource "aws_vpc_security_group_ingress_rule" "allow_ssh" {
+
+  security_group_id = aws_security_group.allow_port_traffic.id
+  cidr_ipv4         = var.wildcard
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+  description       = "Allow SSH"
+
+  tags = {
+    Name = "sg-allow-ssh"
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+#Create egress rule
+
+resource "aws_vpc_security_group_egress_rule" "allow_egress" {
+  security_group_id = aws_security_group.allow_port_traffic.id
+
+  cidr_ipv4   = var.wildcard
+  ip_protocol = "-1"
 }
