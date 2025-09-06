@@ -17,3 +17,7 @@ variable "public_subnets" {
 variable "main_vpc_id" {
   type = string
 }
+
+variable "ssh_key" {
+  type = string
+}

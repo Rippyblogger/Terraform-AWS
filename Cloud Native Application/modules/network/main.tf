@@ -1,100 +1,178 @@
-#VPC
-resource "aws_vpc" "main_vpc" {
-  cidr_block           = var.main_vpc_cidr
-  instance_tenancy     = "default"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name        = var.vpc_name
-    environment = var.environment
-  }
-}
-
-#internet Gateway
-resource "aws_internet_gateway" "main_igw" {
-  vpc_id = aws_vpc.main_vpc.id
-
-  tags = {
-    Name        = "${var.vpc_name}-igw"
-    Environment = var.environment
-  }
-}
-
-# Elastic IPs
-
-resource "aws_eip" "elastic_ips" {
-  for_each = {for item, value in var.public_subnets : item => value}
-  domain = "vpc"
-}
-
-#NAT Gateways
-
-resource "aws_nat_gateway" "nat_gateway" {
-    for_each = {for item, value in var.public_subnets : item => value}
-    allocation_id = aws_eip.elastic_ips[each.key].id
-    subnet_id = aws_subnet.public_subnets[each.key].id
-}
-
-#Get Availability zones
-data "aws_availability_zones" "azs" {
+//Get avaialable AZs
+data "aws_availability_zones" "available" {
   state = "available"
 }
 
-#Create public subnets
-resource "aws_subnet" "public_subnets" {
-  for_each = {for subnet, value in var.public_subnets : subnet => value}
-  vpc_id   = aws_vpc.main_vpc.id
-  cidr_block = cidrsubnet(var.main_vpc_cidr, 8, index((var.public_subnets), each.value)+1)
-  availability_zone = data.aws_availability_zones.azs.names[index(var.public_subnets, each.value)]
+//Create VPC
+resource "aws_vpc" "main" {
+  cidr_block = var.main_vpc_cidr
+  enable_dns_support  = true
+  enable_dns_hostnames = true
 
   tags = {
-    Name        = each.value
-    environment = var.environment
+    "Name" = var.vpc_name
+    "Environment" = var.environment
+      }
+}
+
+//Create public subnets
+
+resource "aws_subnet" "public_subnet_1" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.public_subnets[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch  = true
+  
+  tags = {
+    Name = "Public Subnet 1"
   }
 }
 
-#Create private subnets
-resource "aws_subnet" "private_subnets" {
-  for_each = {for subnet, value in var.private_subnets : subnet => value}
-  vpc_id   = aws_vpc.main_vpc.id
-  cidr_block = cidrsubnet(var.main_vpc_cidr, 8, index((var.private_subnets), each.value)+3)
-  availability_zone = data.aws_availability_zones.azs.names[index(var.private_subnets, each.value)]
-
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.public_subnets[1]
+  availability_zone = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch  = true
+  
   tags = {
-    Name        = each.value
-    environment = var.environment
+    Name = "Public Subnet 2"
   }
 }
 
-#Route tables
-resource "aws_route_table" "public_route_table" {
-  vpc_id = aws_vpc.main_vpc.id
+//Create private subnets
+
+resource "aws_subnet" "private_subnets_1" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.private_subnets[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch  = true
+  
+  tags = {
+    Name = "Private Subnet 1"
+  }
+}
+
+resource "aws_subnet" "private_subnets_2" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = var.private_subnets[1]
+  availability_zone = data.aws_availability_zones.available.names[1]
+  map_public_ip_on_launch  = true
+  
+  tags = {
+    Name = "Private Subnet 2"
+  }
+}
+
+//IGW
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = "Main IGW"
+  }
+}
+
+// Main IGW route
+
+resource "aws_route_table" "main_route_table" {
+  vpc_id = aws_vpc.main.id
 
   route {
     cidr_block = var.wildcard
-    gateway_id = aws_internet_gateway.main_igw.id
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "Main route table"
   }
 }
 
-resource "aws_route_table" "private_route_table" {
-  for_each = {for subnet, value in var.private_subnets : subnet => value}
-  vpc_id = aws_vpc.main_vpc.id
+resource "aws_route_table_association" "pub_subnet_1" {
+  subnet_id      = aws_subnet.public_subnet_1.id
+  route_table_id = aws_route_table.main_route_table.id
+}
 
+resource "aws_route_table_association" "pub_subnet_2" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.main_route_table.id
+}
+// Create two eips
+
+resource "aws_eip" "nat_gw_1_eip" {
+  domain   = "vpc"
+
+  tags = {
+    Name = "Eip public 1"
+  }
+}
+
+resource "aws_eip" "nat_gw_2_eip" {
+  domain   = "vpc"
+
+  tags = {
+    Name = "Eip public 2"
+  }
+}
+
+// Create both NAT-GWs
+
+resource "aws_nat_gateway" "nat_Gw_1" {
+  allocation_id = aws_eip.nat_gw_1_eip.id
+  subnet_id     = aws_subnet.public_subnet_1.id
+
+  tags = {
+    Name = "NAT GW 1"
+  }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+resource "aws_nat_gateway" "nat_Gw_2" {
+  allocation_id = aws_eip.nat_gw_2_eip.id
+  subnet_id     = aws_subnet.public_subnet_2.id
+
+  tags = {
+    Name = "NAT GW 2"
+  }
+
+  depends_on = [aws_internet_gateway.igw]
+}
+
+//Create private subnet routes to NAT GWs
+
+resource "aws_route_table" "private_route_table_1" {
+  vpc_id = aws_vpc.main.id
+  
   route {
     cidr_block = var.wildcard
-    nat_gateway_id = aws_nat_gateway.nat_gateway[each.key].id
-}
+    nat_gateway_id = aws_nat_gateway.nat_Gw_1.id
+  }
+
+  tags = {
+    Name = "Private route table 1"
+  }
 }
 
-resource "aws_route_table_association" "public_assoc" {
-  for_each = {for subnet, value in var.public_subnets : subnet => value}
-  subnet_id = aws_subnet.public_subnets[each.key].id
-  route_table_id = aws_route_table.public_route_table.id
+resource "aws_route_table_association" "pvt_subnet_1" {
+  subnet_id      = aws_subnet.private_subnets_1.id
+  route_table_id = aws_route_table.private_route_table_1.id
 }
 
-resource "aws_route_table_association" "private_assoc" {
-  for_each = {for subnet, value in var.private_subnets : subnet => value}
-  subnet_id = aws_subnet.private_subnets[each.key].id
-  route_table_id = aws_route_table.private_route_table[each.key].id
+resource "aws_route_table_association" "pvt_subnet_2" {
+  subnet_id      = aws_subnet.private_subnets_2.id
+  route_table_id = aws_route_table.private_route_table_2.id
+}
+
+resource "aws_route_table" "private_route_table_2" {
+  vpc_id = aws_vpc.main.id
+  
+  route {
+    cidr_block = var.wildcard
+    nat_gateway_id = aws_nat_gateway.nat_Gw_2.id
+  }
+
+  tags = {
+    Name = "Private route table 2"
+  }
 }
