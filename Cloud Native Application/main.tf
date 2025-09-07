@@ -38,3 +38,10 @@ module "application" {
   allow_internal_sg     = module.security.allow_internal_sg
   allow_bastion_ingress = module.security.allow_bastion_ingress
 }
+
+module "storage" {
+  source            = "./modules/storage"
+  allow_internal_sg = module.security.allow_internal_sg
+  private_subnet_1  = module.network.private_subnet_1
+  ssh_key           = module.bastion.ssh_key_name
+}
