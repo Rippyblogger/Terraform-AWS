@@ -29,3 +29,7 @@ variable "ssh_key" {
 variable "workstation_ip" {
   type = string
 }
+
+variable "instance_type" {
+  type = string
+}

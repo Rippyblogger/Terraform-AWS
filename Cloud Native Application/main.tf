@@ -14,7 +14,7 @@ module "security" {
   environment    = var.environment
   main_vpc_id    = module.network.vpc_id
   vpc_cidr_block = module.network.vpc_cidr
-  workstation_ip    = var.workstation_ip
+  workstation_ip = var.workstation_ip
 }
 
 module "bastion" {
@@ -23,14 +23,16 @@ module "bastion" {
   allow_ssh_sg      = module.security.allow_ssh_sg
   allow_internal_sg = module.security.allow_internal_sg
   public_ssh_key    = var.ssh_key
-  
+
 }
 
-# module "application" {
-#   source = "./modules/application"
-#   alb_name = "nginx-alb"
-#   environment = "Testing"
-#   alb_id = module.security.alb_sg
-#   public_subnets = module.network.public_subnets
-#   main_vpc_id = module.network.vpc_id
-# }
+module "application" {
+  source           = "./modules/application"
+  environment      = var.environment
+  private_subnet_1 = module.network.private_subnet_1
+  private_subnet_2 = module.network.private_subnet_2
+  main_vpc_id      = module.network.vpc_id
+  ssh_key          = var.ssh_key
+  instance_type    = var.instance_type
+  allow_internal_sg = module.security.allow_internal_sg
+}

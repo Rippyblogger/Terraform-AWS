@@ -1,134 +1,10 @@
-#Init template
-
-data "template_cloudinit_config" "config" {
-  gzip          = false
-  base64_encode = false
-
-  #userdata
-  part {
-    content_type = "text/x-shellscript"
-    content      = <<-EOF
-    #! /bin/bash
-    apt-get -y update
-    apt-get -y install nginx
-    apt-get -y install jq
-
-    ALB_DNS=${aws_lb.alb1.dns_name}
-    MONGODB_PRIVATEIP=${var.mongodb_ip}
-    
-    mkdir -p /tmp/cloudacademy-app
-    cd /tmp/cloudacademy-app
-
-    echo ===========================
-    echo FRONTEND - download latest release and install...
-    mkdir -p ./voteapp-frontend-react-2020
-    pushd ./voteapp-frontend-react-2020
-    curl -sL https://api.github.com/repos/cloudacademy/voteapp-frontend-react-2020/releases/latest | jq -r '.assets[0].browser_download_url' | xargs curl -OL
-    INSTALL_FILENAME=$(curl -sL https://api.github.com/repos/cloudacademy/voteapp-frontend-react-2020/releases/latest | jq -r '.assets[0].name')
-    tar -xvzf $INSTALL_FILENAME
-    rm -rf /var/www/html
-    cp -R build /var/www/html
-    cat > /var/www/html/env-config.js << EOFF
-    window._env_ = {REACT_APP_APIHOSTPORT: "$ALB_DNS"}
-    EOFF
-    popd
-
-    echo ===========================
-    echo API - download latest release, install, and start...
-    mkdir -p ./voteapp-api-go
-    pushd ./voteapp-api-go
-    curl -sL https://api.github.com/repos/cloudacademy/voteapp-api-go/releases/latest | jq -r '.assets[] | select(.name | contains("linux-amd64")) | .browser_download_url' | xargs curl -OL
-    INSTALL_FILENAME=$(curl -sL https://api.github.com/repos/cloudacademy/voteapp-api-go/releases/latest | jq -r '.assets[] | select(.name | contains("linux-amd64")) | .name')
-    tar -xvzf $INSTALL_FILENAME
-    #start the API up...
-    MONGO_CONN_STR=mongodb://$MONGODB_PRIVATEIP:27017/langdb ./api &
-    popd
-
-    systemctl restart nginx
-    systemctl status nginx
-    echo fin v1.00!
-
-    EOF    
-  }
-}
-
-
-resource "aws_lb" "nginx_alb" {
-  name               = var.alb_name
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [var.alb_id]
-  subnets = var.public_subnets
-
-
-  tags = {
-    environment = var.environment
-  }
-}
-
-# frontend target group
-resource "aws_lb_target_group" "front_end" {
-  name        = "${var.alb_name}-frontend-tg"
-  target_type = "alb"
-  port        = 80
-  protocol    = "HTTP"
-  vpc_id      = var.main_vpc_id
-}
-
-#  api target group
-resource "aws_lb_target_group" "api" {
-  name        = "${var.alb_name}-api-tg"
-  target_type = "alb"
-  port        = 8080
-  protocol    = "HTTP"
-  vpc_id      = var.main_vpc_id
-}
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.nginx_alb.arn
-  port              = "80"
-  protocol          = "HTTP"
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.front_end.arn
-  }
-}
-
-#Add listener rule
-resource "aws_lb_listener_rule" "nginx_lb_rule" {
-  listener_arn = aws_lb_listener.front_end.arn
-  priority     = 99
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.front_end.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
-  }
-}
-
-
-#Yet to add listener rule for api TG
-
-
-#Instance config
-
+#Get ami
 data "aws_ami" "ubuntu" {
   most_recent = true
-  owners      = ["amazon"]
 
   filter {
-    name   = "image-id"
-    values = ["ami-0fc5d935ebf8bc3bc"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
   }
 
   filter {
@@ -136,25 +12,93 @@ data "aws_ami" "ubuntu" {
     values = ["hvm"]
   }
 
+  owners = ["099720109477"] # Canonical
 }
 
-#SSH key
 
-resource "aws_key_pair" "frontend_key" {
-  key_name = "deployer_key"
-  public_key = var.ssh_key
+#Create placement group
+resource "aws_placement_group" "frontend_group" {
+  name     = "Frontend Cluster"
+  strategy = "cluster"
 }
 
-resource "aws_launch_template" "frontend_template" {
+#Create launch template
 
-  name = "frontend_vms"
-  key_name = aws_key_pair.frontend_key.key_name
-  instance_type = "t3.micro"
-  image_id = data.aws_ami.ubuntu.id
-  
+resource "aws_launch_template" "frontend_instances" {
+  name = "app_instances_LT"
 
-  tags = {
-    Name        = "${var.alb_name}-vms"
-    environment = var.environment
+  block_device_mappings {
+    device_name = "/dev/sdf"
+
+    ebs {
+      volume_size = 20
+    }
   }
+
+  ebs_optimized = true
+
+  image_id = data.aws_ami.ubuntu.id
+
+  instance_initiated_shutdown_behavior = "terminate"
+
+  instance_type = var.instance_type
+
+  key_name = var.ssh_key
+
+  monitoring {
+    enabled = true
+  }
+
+  network_interfaces {
+    associate_public_ip_address = false
+  }
+
+  vpc_security_group_ids = [var.allow_internal_sg.id]
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "Application instance"
+    }
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+}
+
+# Create autoscaling group 
+resource "aws_autoscaling_group" "frontend" {
+  name                      = "Frontend Instances"
+  max_size                  = 4
+  min_size                  = 2
+  health_check_grace_period = 180
+  health_check_type         = "ELB"
+  desired_capacity          = 2
+  force_delete              = true
+  placement_group           = aws_placement_group.frontend_group.id
+  vpc_zone_identifier       = [var.private_subnet_1, var.private_subnet_2]
+
+  launch_template {
+    id = aws_launch_template.frontend_instances.id
+    version = "$latest"
+  }
+
+  instance_maintenance_policy {
+    min_healthy_percentage = 90
+    max_healthy_percentage = 120
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "Frontend ASG"
+    propagate_at_launch = true
+  }
+
+  timeouts {
+    delete = "15m"
+  }
+
 }

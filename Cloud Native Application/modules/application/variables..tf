@@ -2,16 +2,12 @@ variable "environment" {
   type = string
 }
 
-variable "alb_name" {
+variable "private_subnet_1" {
   type = string
 }
 
-variable "alb_id" {
+variable "private_subnet_2" {
   type = string
-}
-
-variable "public_subnets" {
-  type = list(string)
 }
 
 variable "main_vpc_id" {
@@ -19,5 +15,13 @@ variable "main_vpc_id" {
 }
 
 variable "ssh_key" {
+  type = string
+}
+
+variable "instance_type"{
+  type = string
+}
+
+variable "allow_internal_sg" {
   type = string
 }
