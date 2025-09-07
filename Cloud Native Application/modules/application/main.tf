@@ -36,13 +36,9 @@ resource "aws_launch_template" "frontend_instances" {
   }
 
   ebs_optimized = true
-
   image_id = data.aws_ami.ubuntu.id
-
   instance_initiated_shutdown_behavior = "terminate"
-
   instance_type = var.instance_type
-
   key_name = var.ssh_key
 
   monitoring {
@@ -53,7 +49,7 @@ resource "aws_launch_template" "frontend_instances" {
     associate_public_ip_address = false
   }
 
-  vpc_security_group_ids = [var.allow_internal_sg.id]
+  vpc_security_group_ids = [var.allow_internal_sg, var.allow_bastion_ingress]
 
   tag_specifications {
     resource_type = "instance"
@@ -93,7 +89,7 @@ resource "aws_autoscaling_group" "frontend" {
 
   tag {
     key                 = "Name"
-    value               = "Frontend ASG"
+    value               = "Frontend-ASG"
     propagate_at_launch = true
   }
 
@@ -101,4 +97,15 @@ resource "aws_autoscaling_group" "frontend" {
     delete = "15m"
   }
 
+}
+
+//Obtain frontend instances IPs
+
+data "aws_instances" "asg_instances" {
+  filter {
+    name   = "Name"
+    values = ["Frontend-ASG"]
+  }
+
+  depends_on = [aws_autoscaling_group.frontend]
 }

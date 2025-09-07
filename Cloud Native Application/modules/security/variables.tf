@@ -17,3 +17,7 @@ variable "vpc_cidr_block" {
 variable "workstation_ip" {
   type = string
 }
+
+variable "bastion_private_ip" {
+  type = string
+}

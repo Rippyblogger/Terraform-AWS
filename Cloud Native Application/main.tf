@@ -9,12 +9,13 @@ module "network" {
 }
 
 module "security" {
-  source         = "./modules/security"
-  wildcard       = var.wildcard
-  environment    = var.environment
-  main_vpc_id    = module.network.vpc_id
-  vpc_cidr_block = module.network.vpc_cidr
-  workstation_ip = var.workstation_ip
+  source             = "./modules/security"
+  wildcard           = var.wildcard
+  environment        = var.environment
+  main_vpc_id        = module.network.vpc_id
+  vpc_cidr_block     = module.network.vpc_cidr
+  workstation_ip     = var.workstation_ip
+  bastion_private_ip = module.bastion.bastion_private_ip
 }
 
 module "bastion" {
@@ -27,12 +28,13 @@ module "bastion" {
 }
 
 module "application" {
-  source           = "./modules/application"
-  environment      = var.environment
-  private_subnet_1 = module.network.private_subnet_1
-  private_subnet_2 = module.network.private_subnet_2
-  main_vpc_id      = module.network.vpc_id
-  ssh_key          = var.ssh_key
-  instance_type    = var.instance_type
-  allow_internal_sg = module.security.allow_internal_sg
+  source                = "./modules/application"
+  environment           = var.environment
+  private_subnet_1      = module.network.private_subnet_1
+  private_subnet_2      = module.network.private_subnet_2
+  main_vpc_id           = module.network.vpc_id
+  ssh_key               = var.ssh_key
+  instance_type         = var.instance_type
+  allow_internal_sg     = module.security.allow_internal_sg
+  allow_bastion_ingress = module.security.allow_bastion_ingress
 }

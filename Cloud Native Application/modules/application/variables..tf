@@ -25,3 +25,7 @@ variable "instance_type"{
 variable "allow_internal_sg" {
   type = string
 }
+
+variable "allow_bastion_ingress" {
+  type = string
+}
