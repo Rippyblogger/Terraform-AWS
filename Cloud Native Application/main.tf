@@ -33,7 +33,7 @@ module "application" {
   private_subnet_1      = module.network.private_subnet_1
   private_subnet_2      = module.network.private_subnet_2
   main_vpc_id           = module.network.vpc_id
-  ssh_key               = var.ssh_key
+  ssh_key               = module.bastion.ssh_key_name
   instance_type         = var.instance_type
   allow_internal_sg     = module.security.allow_internal_sg
   allow_bastion_ingress = module.security.allow_bastion_ingress

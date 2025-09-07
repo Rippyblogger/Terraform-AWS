@@ -15,13 +15,6 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-
-#Create placement group
-resource "aws_placement_group" "frontend_group" {
-  name     = "Frontend Cluster"
-  strategy = "cluster"
-}
-
 #Create launch template
 
 resource "aws_launch_template" "frontend_instances" {
@@ -47,9 +40,8 @@ resource "aws_launch_template" "frontend_instances" {
 
   network_interfaces {
     associate_public_ip_address = false
+    security_groups = [var.allow_internal_sg, var.allow_bastion_ingress]
   }
-
-  vpc_security_group_ids = [var.allow_internal_sg, var.allow_bastion_ingress]
 
   tag_specifications {
     resource_type = "instance"
@@ -74,12 +66,11 @@ resource "aws_autoscaling_group" "frontend" {
   health_check_type         = "ELB"
   desired_capacity          = 2
   force_delete              = true
-  placement_group           = aws_placement_group.frontend_group.id
   vpc_zone_identifier       = [var.private_subnet_1, var.private_subnet_2]
 
   launch_template {
     id = aws_launch_template.frontend_instances.id
-    version = "$latest"
+    version = "$Latest"
   }
 
   instance_maintenance_policy {
@@ -103,8 +94,13 @@ resource "aws_autoscaling_group" "frontend" {
 
 data "aws_instances" "asg_instances" {
   filter {
-    name   = "Name"
+    name   = "tag:Name"
     values = ["Frontend-ASG"]
+  }
+
+  filter {
+    name   = "instance-state-name"
+    values = ["running"]
   }
 
   depends_on = [aws_autoscaling_group.frontend]

@@ -15,7 +15,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_internal_traffic" {
   cidr_ipv4         = var.vpc_cidr_block
   from_port         = 0
   to_port           = 65535
-  ip_protocol       = "-1"
+  ip_protocol       = "tcp"
   description       = "sg_allow_internal"
 
   tags = {
@@ -68,8 +68,8 @@ resource "aws_vpc_security_group_egress_rule" "allow_egress" {
 
 
 resource "aws_security_group" "allow_bastion_connect" {
-  name        = "Allow ports"
-  description = "Allow ports"
+  name        = "Allow bastion connect"
+  description = "Allows connectivity via bastion"
   vpc_id      = var.main_vpc_id
 
   tags = {
