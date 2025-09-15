@@ -42,6 +42,7 @@ module "application" {
 module "storage" {
   source            = "./modules/storage"
   allow_internal_sg = module.security.allow_internal_sg
+  allow_mongodb_connect_sg = module.security.allow_mongodb_connect
   private_subnet_1  = module.network.private_subnet_1
   ssh_key           = module.bastion.ssh_key_name
 }

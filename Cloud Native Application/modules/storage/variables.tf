@@ -9,3 +9,7 @@ variable "private_subnet_1" {
 variable "ssh_key" {
   type = string
 }
+
+variable "allow_mongodb_connect_sg" {
+  type = string
+}

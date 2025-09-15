@@ -5,3 +5,7 @@ output "public_ip"{
 output "frontend_private_ips" {
   value = module.application.frontend_instances_ips
 }
+
+output "mondgdb_ip" {
+  value = module.storage.mondgdb_ip
+}

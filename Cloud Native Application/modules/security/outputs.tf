@@ -13,3 +13,7 @@ output "allow_internal_sg" {
 output "allow_bastion_ingress" {
   value = aws_security_group.allow_bastion_connect.id
 }
+
+output "allow_mongodb_connect" {
+  value = aws_security_group.allow_mongodb_connect.id
+}
