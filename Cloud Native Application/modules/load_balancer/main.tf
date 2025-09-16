@@ -1,3 +1,8 @@
+#Declare random id
+resource "random_id" "suffix" {
+  byte_length = 4
+} 
+
 //Create ALB logging S3 bucket
 
 resource "aws_s3_bucket" "lb_logs" {
@@ -38,7 +43,7 @@ resource "aws_lb_target_group" "frontend_target_group" {
   target_type = "instance"
   port        = 80
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.main_vpc_id
+  vpc_id      = var.main_vpc_id
 }
 
 #API Target group
@@ -47,7 +52,7 @@ resource "aws_lb_target_group" "api_target_group" {
   target_type = "instance"
   port        = 8080
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.main_vpc_id
+  vpc_id      = var.main_vpc_id
 }
 
 // Create listeners
