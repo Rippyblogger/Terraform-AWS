@@ -6,7 +6,8 @@ resource "random_id" "suffix" {
 //Create ALB logging S3 bucket
 
 resource "aws_s3_bucket" "lb_logs" {
-  bucket = "lb-logs-${var.environment}-${random_id.suffix.hex}"
+  bucket = lower("lb-logs-${var.environment}-${random_id.suffix.hex}")
+
 
   tags = {
     Name        = "ALB bucket"
