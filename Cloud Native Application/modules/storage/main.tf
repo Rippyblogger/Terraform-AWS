@@ -29,5 +29,5 @@ resource "aws_instance" "mongodb_instance" {
     Name = "MongoDB Instance"
   }
 
-  associate_public_ip_address = true
+  associate_public_ip_address = false
 }

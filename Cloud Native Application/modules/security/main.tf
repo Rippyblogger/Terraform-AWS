@@ -146,7 +146,7 @@ resource "aws_vpc_security_group_ingress_rule" "allow_bastion_ingress_db" {
 
 resource "aws_vpc_security_group_egress_rule" "allow_db_egress" {
   security_group_id = aws_security_group.allow_mongodb_connect.id
-  cidr_ipv4         = local.bastion_cidr_block
+  cidr_ipv4         = var.wildcard
   ip_protocol       = "-1"
 }
 
