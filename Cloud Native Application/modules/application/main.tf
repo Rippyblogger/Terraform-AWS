@@ -33,7 +33,7 @@ data "template_cloudinit_config" "config" {
       echo "Installing prerequisites..."
       apt-get -y install nginx jq curl tar
 
-      ALB_DNS=${aws_lb.alb1.dns_name}
+      ALB_DNS=${var.alb_dns_name}
       MONGODB_PRIVATEIP=${var.mongodb_ip}
 
       mkdir -p /tmp/cloudacademy-app
@@ -79,7 +79,7 @@ data "template_cloudinit_config" "config" {
       [Service]
       ExecStart=/usr/local/bin/voteapp-api
       Restart=always
-      Environment="MONGO_CONN_STR=mongodb://${MONGODB_PRIVATEIP}:27017/langdb"
+      Environment="MONGO_CONN_STR=mongodb://$${MONGODB_PRIVATEIP}:27017/langdb"
       WorkingDirectory=/tmp/cloudacademy-app/voteapp-api-go
       StandardOutput=journal
       StandardError=journal
@@ -113,12 +113,12 @@ resource "aws_launch_template" "frontend_instances" {
     }
   }
 
-  ebs_optimized = true
-  image_id = data.aws_ami.ubuntu.id
+  ebs_optimized                        = true
+  image_id                             = data.aws_ami.ubuntu.id
   instance_initiated_shutdown_behavior = "terminate"
-  instance_type = var.instance_type
-  key_name = var.ssh_key
-  user_data = data.template_cloudinit_config.config.rendered
+  instance_type                        = var.instance_type
+  key_name                             = var.ssh_key
+  user_data                            = data.template_cloudinit_config.config.rendered
 
   monitoring {
     enabled = true
@@ -126,7 +126,7 @@ resource "aws_launch_template" "frontend_instances" {
 
   network_interfaces {
     associate_public_ip_address = false
-    security_groups = [var.allow_internal_sg, var.allow_bastion_ingress]
+    security_groups             = [var.allow_internal_sg, var.allow_bastion_ingress]
   }
 
   tag_specifications {
@@ -153,9 +153,12 @@ resource "aws_autoscaling_group" "frontend" {
   desired_capacity          = 2
   force_delete              = true
   vpc_zone_identifier       = [var.private_subnet_1, var.private_subnet_2]
-
+  target_group_arns = [
+    var.frontend_tg_arn,
+    var.api_tg_arn
+  ]
   launch_template {
-    id = aws_launch_template.frontend_instances.id
+    id      = aws_launch_template.frontend_instances.id
     version = "$Latest"
   }
 

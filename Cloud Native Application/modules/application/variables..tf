@@ -33,3 +33,15 @@ variable "allow_bastion_ingress" {
 variable "mongodb_ip" {
   type = string
 }
+
+variable "alb_dns_name" {
+  type = string
+}
+
+variable "frontend_tg_arn" {
+    type = string
+}
+
+variable "api_tg_arn" {
+    type = string
+}

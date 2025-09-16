@@ -23,7 +23,7 @@ resource "aws_instance" "mongodb_instance" {
   vpc_security_group_ids = [var.allow_internal_sg, var.allow_mongodb_connect_sg]
   key_name               = var.ssh_key
 
-  user_data = filebase64("${path.module}/install.sh")
+  user_data = file("${path.module}/install.sh")
 
   tags = {
     Name = "MongoDB Instance"
