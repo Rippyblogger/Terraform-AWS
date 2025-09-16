@@ -29,3 +29,7 @@ variable "allow_internal_sg" {
 variable "allow_bastion_ingress" {
   type = string
 }
+
+variable "mongodb_ip" {
+  type = string
+}

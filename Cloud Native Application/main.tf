@@ -37,6 +37,9 @@ module "application" {
   instance_type         = var.instance_type
   allow_internal_sg     = module.security.allow_internal_sg
   allow_bastion_ingress = module.security.allow_bastion_ingress
+  mongodb_ip = module.storage.mondgdb_ip
+
+  depends_on = [ module.storage ]
 }
 
 module "storage" {
