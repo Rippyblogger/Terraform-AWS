@@ -7,6 +7,7 @@ resource "random_id" "suffix" {
 
 resource "aws_s3_bucket" "lb_logs" {
   bucket = lower("lb-logs-${var.environment}-${random_id.suffix.hex}")
+  force_destroy = true
 
 
   tags = {

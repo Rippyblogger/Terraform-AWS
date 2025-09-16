@@ -63,7 +63,11 @@ db.languages.find().pretty();
 EOF
 
 # Wait until mongo is ready and run the script
-until mongosh --quiet --file db.setup.js; do
+until mongosh < /tmp/cloudacademy-app/db.setup.js; do
+  echo "Waiting for MongoDB to be ready..."
+  sleep 5
+done
+
   echo "Waiting for MongoDB to be ready..."
   sleep 5
 done
