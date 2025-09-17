@@ -120,8 +120,8 @@ resource "aws_vpc_security_group_egress_rule" "allow_bastion_egress" {
 //DB instance SG and rules
 
 resource "aws_security_group" "allow_mongodb_connect" {
-  name        = "Allow mongodb connect"
-  vpc_id      = var.main_vpc_id
+  name   = "Allow mongodb connect"
+  vpc_id = var.main_vpc_id
 
   tags = {
     Name = "sg-allow-mongodb-access"
@@ -165,4 +165,34 @@ resource "aws_vpc_security_group_ingress_rule" "allow_ssh_to_db" {
   lifecycle {
     create_before_destroy = true
   }
+}
+
+#ALB traffic
+
+resource "aws_security_group" "alb_sg" {
+  name        = "alb-sg"
+  description = "Allow HTTP traffic"
+  vpc_id      = var.main_vpc_id
+}
+
+resource "aws_vpc_security_group_ingress_rule" "alb_http" {
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = var.wildcard
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = "tcp"
+  description       = "Allow HTTP connection"
+
+  tags = {
+    Name = "sg-allow-http"
+  }
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_vpc_security_group_egress_rule" "allow_lb_egress" {
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = var.wildcard
+  ip_protocol       = "-1"
 }

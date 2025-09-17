@@ -1,8 +1,8 @@
-variable "private_subnet_1" {
+variable "public_subnet_1" {
   type = string
 }
 
-variable "private_subnet_2" {
+variable "public_subnet_2" {
   type = string
 }
 
@@ -15,5 +15,9 @@ variable "environment" {
 }
 
 variable "main_vpc_id" {
-    type = string
+  type = string
+}
+
+variable "alb_sg" {
+  type = string
 }

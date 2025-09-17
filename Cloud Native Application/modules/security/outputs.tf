@@ -17,3 +17,7 @@ output "allow_bastion_ingress" {
 output "allow_mongodb_connect" {
   value = aws_security_group.allow_mongodb_connect.id
 }
+
+output "alb_sg" {
+  value = aws_security_group.alb_sg.id
+}

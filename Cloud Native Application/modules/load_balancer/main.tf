@@ -1,12 +1,12 @@
 #Declare random id
 resource "random_id" "suffix" {
   byte_length = 4
-} 
+}
 
 //Create ALB logging S3 bucket
 
 resource "aws_s3_bucket" "lb_logs" {
-  bucket = lower("lb-logs-${var.environment}-${random_id.suffix.hex}")
+  bucket        = lower("lb-logs-${var.environment}-${random_id.suffix.hex}")
   force_destroy = true
 
 
@@ -20,10 +20,10 @@ resource "aws_s3_bucket" "lb_logs" {
 
 resource "aws_lb" "internal" {
   name               = "frontend-alb"
-  internal           = true
+  internal           = false
   load_balancer_type = "application"
-  security_groups    = [var.allow_internal_sg]
-  subnets            = [var.private_subnet_1, var.private_subnet_2]
+  security_groups    = [var.allow_internal_sg, var.alb_sg]
+  subnets            = [var.public_subnet_1, var.public_subnet_2]
 
   enable_deletion_protection = false
 

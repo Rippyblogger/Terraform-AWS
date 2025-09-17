@@ -37,26 +37,27 @@ module "application" {
   instance_type         = var.instance_type
   allow_internal_sg     = module.security.allow_internal_sg
   allow_bastion_ingress = module.security.allow_bastion_ingress
-  mongodb_ip = module.storage.mondgdb_ip
-  alb_dns_name = module.load_balancer.alb_dns_name
-  frontend_tg_arn = module.load_balancer.frontend_tg_arn
-  api_tg_arn = module.load_balancer.api_tg_arn
-  depends_on = [ module.storage ]
+  mongodb_ip            = module.storage.mondgdb_ip
+  alb_dns_name          = module.load_balancer.alb_dns_name
+  frontend_tg_arn       = module.load_balancer.frontend_tg_arn
+  api_tg_arn            = module.load_balancer.api_tg_arn
+  depends_on            = [module.storage]
 }
 
 module "load_balancer" {
-  source = "./modules/load_balancer"
-  private_subnet_1      = module.network.private_subnet_1
-  private_subnet_2      = module.network.private_subnet_2
-  allow_internal_sg     = module.security.allow_internal_sg
-  environment           = var.environment
-  main_vpc_id           = module.network.vpc_id
+  source            = "./modules/load_balancer"
+  public_subnet_1   = module.network.public_subnet_1
+  public_subnet_2   = module.network.public_subnet_2
+  allow_internal_sg = module.security.allow_internal_sg
+  alb_sg            = module.security.alb_sg
+  environment       = var.environment
+  main_vpc_id       = module.network.vpc_id
 }
 
 module "storage" {
-  source            = "./modules/storage"
-  allow_internal_sg = module.security.allow_internal_sg
+  source                   = "./modules/storage"
+  allow_internal_sg        = module.security.allow_internal_sg
   allow_mongodb_connect_sg = module.security.allow_mongodb_connect
-  private_subnet_1  = module.network.private_subnet_1
-  ssh_key           = module.bastion.ssh_key_name
+  private_subnet_1         = module.network.private_subnet_1
+  ssh_key                  = module.bastion.ssh_key_name
 }

@@ -146,7 +146,7 @@ resource "aws_launch_template" "frontend_instances" {
 # Create autoscaling group 
 resource "aws_autoscaling_group" "frontend" {
   name                      = "Frontend Instances"
-  max_size                  = 4
+  max_size                  = 2
   min_size                  = 2
   health_check_grace_period = 180
   health_check_type         = "ELB"
