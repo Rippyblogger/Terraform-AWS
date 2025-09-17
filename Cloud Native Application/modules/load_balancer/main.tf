@@ -76,7 +76,7 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_lb_listener_rule" "frontend_rule" {
   listener_arn = aws_lb_listener.http.arn
-  priority     = 1
+  priority     = 2  
 
   action {
     type             = "forward"
@@ -89,10 +89,9 @@ resource "aws_lb_listener_rule" "frontend_rule" {
     }
   }
 }
-
 resource "aws_lb_listener_rule" "api_rule" {
   listener_arn = aws_lb_listener.http.arn
-  priority     = 2
+  priority     = 1  
 
   action {
     type             = "forward"
@@ -101,7 +100,13 @@ resource "aws_lb_listener_rule" "api_rule" {
 
   condition {
     path_pattern {
-      values = ["/api/*"]
+      values = [
+        "/api/*",
+        "/languages",
+        "/languages/*",
+        "/languages/*/*",
+        "/ok"
+      ]
     }
   }
 }
